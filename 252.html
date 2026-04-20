@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>252</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #2a3a47;
+    color: #e8e4dc;
+    font-family: 'Georgia', serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 2rem;
+    letter-spacing: 0.3em;
+    margin-bottom: 16px;
+    color: #c8c0b0;
+  }
+
+  /* Score panel */
+  #scoreboard {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+
+  .score-card {
+    padding: 10px 20px;
+    border-radius: 4px;
+    text-align: center;
+    min-width: 120px;
+  }
+
+  .score-card.p1 {
+    background: #F0EEE8;
+    color: #1A1A1A;
+    border: 2px solid #d0ccc4;
+  }
+
+  .score-card.p2 {
+    background: #1C1C1C;
+    color: #F0EEE8;
+    border: 2px solid #3a3a3a;
+  }
+
+  .score-card.active {
+    box-shadow: 0 0 0 3px #e8c44a;
+  }
+
+  .score-label { font-size: 0.75rem; letter-spacing: 0.1em; opacity: 0.7; }
+  .score-value { font-size: 1.8rem; font-weight: bold; }
+  .score-name  { font-size: 0.85rem; margin-top: 2px; }
+
+  /* Grid */
+  #board-wrap {
+    background: #3a4e5c;
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+
+  #board {
+    display: grid;
+    grid-template-columns: repeat(12, 44px);
+    grid-template-rows: repeat(12, 44px);
+    gap: 0;
+  }
+
+  .cell {
+    width: 44px;
+    height: 44px;
+    background: #7A9BB5;
+    border: 1px solid #6a8ba5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    font-size: 1rem;
+    font-weight: bold;
+    user-select: none;
+    transition: background 0.15s, transform 0.1s;
+  }
+
+  /* Sub-grid thick borders every 4 cells */
+  .cell[data-col="0"]  { border-left: 2px solid #4a6a80; }
+  .cell[data-col="4"]  { border-left: 2px solid #4a6a80; }
+  .cell[data-col="8"]  { border-left: 2px solid #4a6a80; }
+  .cell[data-col="11"] { border-right: 2px solid #4a6a80; }
+  .cell[data-row="0"]  { border-top: 2px solid #4a6a80; }
+  .cell[data-row="4"]  { border-top: 2px solid #4a6a80; }
+  .cell[data-row="8"]  { border-top: 2px solid #4a6a80; }
+  .cell[data-row="11"] { border-bottom: 2px solid #4a6a80; }
+
+  /* Player cell colors */
+  .cell.p1       { background: #F0EEE8; color: #1A1A1A; }
+  .cell.p2       { background: #1C1C1C; color: #F0EEE8; }
+  .cell.p1.cashed { background: #B8B4AC; color: #666; }
+  .cell.p2.cashed { background: #4A4A4A; color: #999; }
+
+  /* Double marker */
+  .cell .double-dot {
+    position: absolute;
+    top: 3px;
+    right: 4px;
+    font-size: 0.55rem;
+    color: #e8c44a;
+    line-height: 1;
+  }
+
+  /* Highlight states */
+  .cell.highlight-valid    { background: #8ab89a !important; cursor: pointer; }
+  .cell.highlight-invalid  { background: #b88a8a !important; }
+  .cell.highlight-selected { background: #e8c44a !important; color: #1a1a1a !important; }
+  .cell.highlight-block-valid   { background: #7acc8a !important; }
+  .cell.highlight-block-invalid { background: #cc7a7a !important; }
+  .cell.highlight-anchor   { background: #e8c44a !important; color: #1a1a1a !important; }
+
+  .cell:not([class*="p1"]):not([class*="p2"]).cell:hover {
+    filter: brightness(1.1);
+  }
+
+  /* Controls */
+  #controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 540px;
+  }
+
+  #action-row {
+    display: flex;
+    gap: 12px;
+  }
+
+  button {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  button:disabled { opacity: 0.35; cursor: not-allowed; }
+  button:not(:disabled):hover { opacity: 0.85; }
+  button:not(:disabled):active { transform: scale(0.97); }
+
+  #btn-roll {
+    background: #e8c44a;
+    color: #1a1a1a;
+    font-weight: bold;
+    min-width: 130px;
+  }
+
+  #btn-cash {
+    background: #5a8a6a;
+    color: #f0eee8;
+    font-weight: bold;
+    min-width: 130px;
+  }
+
+  #btn-confirm {
+    background: #4a7aaa;
+    color: #f0eee8;
+    font-weight: bold;
+    min-width: 160px;
+    display: none;
+  }
+
+  #btn-cancel {
+    background: #7a5a5a;
+    color: #f0eee8;
+    min-width: 100px;
+    display: none;
+  }
+
+  #btn-swap {
+    background: #6a6a8a;
+    color: #f0eee8;
+    min-width: 130px;
+    display: none;
+  }
+
+  /* Dice display */
+  #dice-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    min-height: 52px;
+  }
+
+  .die {
+    width: 48px;
+    height: 48px;
+    background: #f0eee8;
+    color: #1a1a1a;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    border: 2px solid #c8c0b0;
+    transition: transform 0.2s;
+  }
+
+  .die.doubles { border-color: #e8c44a; box-shadow: 0 0 6px #e8c44a88; }
+
+  #status {
+    font-size: 0.95rem;
+    color: #b8c8d8;
+    text-align: center;
+    min-height: 1.4em;
+    letter-spacing: 0.02em;
+  }
+
+  /* Placement assignment panel */
+  #assign-panel {
+    display: none;
+    background: #3a4e5c;
+    border-radius: 6px;
+    padding: 12px 20px;
+    text-align: center;
+    gap: 10px;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #assign-panel.visible { display: flex; }
+
+  #assign-panel .assign-label { font-size: 0.85rem; color: #b8c8d8; }
+
+  #assign-preview {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 1.1rem;
+  }
+
+  .assign-cell {
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-weight: bold;
+    min-width: 40px;
+    text-align: center;
+  }
+
+  /* Game over banner */
+  #game-over {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000000bb;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  #game-over.visible { display: flex; }
+
+  #game-over-box {
+    background: #2a3a47;
+    border: 2px solid #e8c44a;
+    border-radius: 8px;
+    padding: 40px 56px;
+    text-align: center;
+  }
+
+  #game-over-box h2 { font-size: 2rem; color: #e8c44a; margin-bottom: 12px; }
+  #game-over-box p  { color: #b8c8d8; margin-bottom: 24px; }
+  #btn-restart { background: #e8c44a; color: #1a1a1a; font-weight: bold; font-size: 1.1rem; padding: 12px 32px; }
+</style>
+</head>
+<body>
+
+<h1>252</h1>
+
+<div id="scoreboard">
+  <div class="score-card p1 active" id="card-p1">
+    <div class="score-label">PLAYER 1</div>
+    <div class="score-value" id="score-p1">0</div>
+    <div class="score-name">White</div>
+  </div>
+  <div style="color:#6a8a9a; font-size:1.4rem;">↔</div>
+  <div class="score-card p2" id="card-p2">
+    <div class="score-label">PLAYER 2</div>
+    <div class="score-value" id="score-p2">0</div>
+    <div class="score-name">Black</div>
+  </div>
+</div>
+
+<div id="board-wrap">
+  <div id="board"></div>
+</div>
+
+<div id="controls">
+  <div id="action-row">
+    <button id="btn-roll">Roll Dice</button>
+    <button id="btn-cash">Cash Block</button>
+    <button id="btn-swap">Swap Numbers</button>
+    <button id="btn-confirm">Confirm</button>
+    <button id="btn-cancel">Cancel</button>
+  </div>
+
+  <div id="dice-row"></div>
+
+  <div id="assign-panel">
+    <div class="assign-label">Assign numbers to selected cells:</div>
+    <div id="assign-preview"></div>
+  </div>
+
+  <div id="status">Player 1's turn — Roll dice or cash a block.</div>
+</div>
+
+<div id="game-over">
+  <div id="game-over-box">
+    <h2 id="game-over-title">Player 1 Wins!</h2>
+    <p id="game-over-msg">Reached 252 points.</p>
+    <button id="btn-restart">Play Again</button>
+  </div>
+</div>
+
+<script>
+// ── Constants ──────────────────────────────────────────────────────────────
+const ROWS = 12, COLS = 12, WIN_SCORE = 252;
+const DIE_FACES = ['', '⚀','⚁','⚂','⚃','⚄','⚅'];
+
+// ── State ──────────────────────────────────────────────────────────────────
+let board, state;
+
+function initGame() {
+  board = Array.from({length: ROWS}, () =>
+    Array.from({length: COLS}, () => ({
+      owner: null, value: null, isDouble: false, isCashed: false
+    }))
+  );
+  state = {
+    currentPlayer: 1,
+    scores: [0, 0],
+    phase: 'roll',          // 'roll' | 'place-first' | 'place-second' | 'cash-select'
+    diceRoll: null,
+    isDoubles: false,
+    firstCell: null,        // {r,c} chosen first in placement
+    secondCell: null,
+    assignment: null,       // [val1, val2] assigned to [first, second]
+    anchorCell: null,       // first corner for block selection
+    hoverCell: null,        // second corner (hover) for block preview
+    pendingBlock: null,     // {r1,c1,r2,c2} confirmed selection
+    p1TriggeredFinal: false,
+    gameOver: false
+  };
+  renderBoard();
+  renderDice();
+  updateUI();
+}
+
+// ── Board rendering ────────────────────────────────────────────────────────
+function renderBoard() {
+  const boardEl = document.getElementById('board');
+  boardEl.innerHTML = '';
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+      cell.addEventListener('click', () => handleCellClick(r, c));
+      cell.addEventListener('mouseenter', () => handleCellHover(r, c));
+      cell.addEventListener('mouseleave', () => handleCellLeave());
+      boardEl.appendChild(cell);
+    }
+  }
+}
+
+function getCellEl(r, c) {
+  return document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+}
+
+function refreshAllCells() {
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      refreshCell(r, c);
+}
+
+function refreshCell(r, c) {
+  const el = getCellEl(r, c);
+  if (!el) return;
+  const cell = board[r][c];
+
+  // Reset classes (keep data attrs)
+  el.className = 'cell';
+
+  if (cell.owner) {
+    el.classList.add('p' + cell.owner);
+    if (cell.isCashed) el.classList.add('cashed');
+  }
+
+  // Content
+  el.innerHTML = '';
+  if (cell.value !== null) {
+    el.textContent = cell.value;
+    if (cell.isDouble) {
+      const dot = document.createElement('span');
+      dot.className = 'double-dot';
+      dot.textContent = '✦';
+      el.appendChild(dot);
+    }
+  }
+}
+
+function applyHighlights(highlights) {
+  // highlights: array of {r, c, cls}
+  refreshAllCells();
+  for (const {r, c, cls} of highlights) {
+    getCellEl(r, c)?.classList.add(cls);
+  }
+}
+
+// ── Dice ───────────────────────────────────────────────────────────────────
+function rollDice() {
+  const d1 = Math.ceil(Math.random() * 6);
+  const d2 = Math.ceil(Math.random() * 6);
+  state.diceRoll = [d1, d2];
+  state.isDoubles = d1 === d2;
+  state.assignment = [d1, d2]; // default: first cell gets d1, second gets d2
+  state.phase = 'place-first';
+  renderDice();
+  updateUI();
+}
+
+function renderDice() {
+  const row = document.getElementById('dice-row');
+  row.innerHTML = '';
+  if (!state.diceRoll) return;
+  const [d1, d2] = state.diceRoll;
+  const cls = state.isDoubles ? 'die doubles' : 'die';
+  row.innerHTML = `<div class="${cls}">${DIE_FACES[d1]}</div>
+                   <div class="${cls}">${DIE_FACES[d2]}</div>`;
+  if (state.isDoubles) {
+    const note = document.createElement('span');
+    note.style.cssText = 'font-size:0.8rem;color:#e8c44a;';
+    note.textContent = 'Doubles! ✦';
+    row.appendChild(note);
+  }
+}
+
+// ── Cell interaction ───────────────────────────────────────────────────────
+function handleCellClick(r, c) {
+  if (state.gameOver) return;
+  const cell = board[r][c];
+
+  if (state.phase === 'place-first') {
+    if (cell.owner || cell.isCashed) return;
+    state.firstCell = {r, c};
+    state.phase = 'place-second';
+    highlightPlacementSecond();
+    updateUI();
+
+  } else if (state.phase === 'place-second') {
+    if (!isAdjacent(state.firstCell, {r, c})) return;
+    if (cell.owner || cell.isCashed) return;
+    state.secondCell = {r, c};
+    // Show assignment panel
+    state.phase = 'place-confirm';
+    highlightSelectedPair();
+    updateUI();
+
+  } else if (state.phase === 'cash-select') {
+    if (!state.anchorCell) {
+      // Only allow clicking own uncashed cells as anchor
+      if (cell.owner !== state.currentPlayer || cell.isCashed) return;
+      state.anchorCell = {r, c};
+      highlightBlockPreview(r, c);
+      updateUI();
+    } else {
+      // Confirm second corner
+      const {r1, c1, r2, c2} = normalizeRect(state.anchorCell.r, state.anchorCell.c, r, c);
+      if (isValidBlock(r1, c1, r2, c2, state.currentPlayer)) {
+        state.pendingBlock = {r1, c1, r2, c2};
+        state.phase = 'cash-confirm';
+        highlightBlock(r1, c1, r2, c2, 'highlight-block-valid');
+        updateUI();
+      } else {
+        highlightBlock(r1, c1, r2, c2, 'highlight-block-invalid');
+        setTimeout(() => {
+          highlightBlockPreview(state.anchorCell.r, state.anchorCell.c);
+        }, 400);
+      }
+    }
+  }
+}
+
+function handleCellHover(r, c) {
+  if (state.phase === 'place-second') {
+    const adj = isAdjacent(state.firstCell, {r, c});
+    const empty = !board[r][c].owner && !board[r][c].isCashed;
+    if (adj && empty) {
+      getCellEl(r, c)?.classList.add('highlight-valid');
+    }
+  } else if (state.phase === 'cash-select' && state.anchorCell) {
+    highlightBlockPreview(r, c);
+  }
+}
+
+function handleCellLeave() {
+  if (state.phase === 'place-second' && state.firstCell) {
+    highlightPlacementSecond();
+  } else if (state.phase === 'cash-select' && state.anchorCell && !state.pendingBlock) {
+    highlightBlockPreview(state.anchorCell.r, state.anchorCell.c);
+  }
+}
+
+// ── Highlight helpers ──────────────────────────────────────────────────────
+function highlightPlacementSecond() {
+  const highlights = [];
+  const {r, c} = state.firstCell;
+  highlights.push({r, c, cls: 'highlight-selected'});
+  for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+    const nr = r+dr, nc = c+dc;
+    if (nr>=0 && nr<ROWS && nc>=0 && nc<COLS) {
+      const cell = board[nr][nc];
+      if (!cell.owner && !cell.isCashed)
+        highlights.push({r:nr, c:nc, cls:'highlight-valid'});
+    }
+  }
+  applyHighlights(highlights);
+}
+
+function highlightSelectedPair() {
+  const highlights = [
+    {r: state.firstCell.r, c: state.firstCell.c, cls: 'highlight-selected'},
+    {r: state.secondCell.r, c: state.secondCell.c, cls: 'highlight-selected'}
+  ];
+  applyHighlights(highlights);
+}
+
+function highlightBlockPreview(r2, c2) {
+  const {r: r1a, c: c1a} = state.anchorCell;
+  const {r1, c1, r2: r2n, c2: c2n} = normalizeRect(r1a, c1a, r2, c2);
+  const valid = isValidBlock(r1, c1, r2n, c2n, state.currentPlayer);
+  const cls = valid ? 'highlight-block-valid' : 'highlight-block-invalid';
+  const highlights = [{r: r1a, c: c1a, cls: 'highlight-anchor'}];
+  for (let rr = r1; rr <= r2n; rr++)
+    for (let cc = c1; cc <= c2n; cc++)
+      if (!(rr === r1a && cc === c1a))
+        highlights.push({r: rr, c: cc, cls});
+  applyHighlights(highlights);
+}
+
+function highlightBlock(r1, c1, r2, c2, cls) {
+  const highlights = [];
+  for (let r = r1; r <= r2; r++)
+    for (let c = c1; c <= c2; c++)
+      highlights.push({r, c, cls});
+  applyHighlights(highlights);
+}
+
+// ── Validation ─────────────────────────────────────────────────────────────
+function isAdjacent(a, b) {
+  return (a.r === b.r && Math.abs(a.c - b.c) === 1) ||
+         (a.c === b.c && Math.abs(a.r - b.r) === 1);
+}
+
+function normalizeRect(r1, c1, r2, c2) {
+  return {
+    r1: Math.min(r1, r2), c1: Math.min(c1, c2),
+    r2: Math.max(r1, r2), c2: Math.max(c1, c2)
+  };
+}
+
+function isValidBlock(r1, c1, r2, c2, player) {
+  const h = r2 - r1 + 1, w = c2 - c1 + 1;
+  if (h < 2 || w < 2) return false;
+  for (let r = r1; r <= r2; r++)
+    for (let c = c1; c <= c2; c++) {
+      const cell = board[r][c];
+      if (cell.owner !== player || cell.isCashed) return false;
+    }
+  return true;
+}
+
+function hasAnyValidBlock(player) {
+  for (let r1 = 0; r1 < ROWS-1; r1++)
+    for (let c1 = 0; c1 < COLS-1; c1++)
+      for (let r2 = r1+1; r2 < ROWS; r2++)
+        for (let c2 = c1+1; c2 < COLS; c2++)
+          if (isValidBlock(r1, c1, r2, c2, player)) return true;
+  return false;
+}
+
+// ── Scoring ────────────────────────────────────────────────────────────────
+function scoreBlock(r1, c1, r2, c2) {
+  let total = 0, hasDouble = false;
+  const size = (r2-r1+1) * (c2-c1+1);
+  for (let r = r1; r <= r2; r++)
+    for (let c = c1; c <= c2; c++) {
+      total += board[r][c].value;
+      if (board[r][c].isDouble) hasDouble = true;
+    }
+  let mult = 1;
+  if (hasDouble) mult *= 2;
+  if (size >= 8) mult *= 2;
+  return { base: total, mult, total: total * mult, hasDouble, size };
+}
+
+// ── Actions ────────────────────────────────────────────────────────────────
+function confirmPlacement() {
+  const {r: r1, c: c1} = state.firstCell;
+  const {r: r2, c: c2} = state.secondCell;
+  const [v1, v2] = state.assignment;
+  board[r1][c1] = { owner: state.currentPlayer, value: v1, isDouble: state.isDoubles, isCashed: false };
+  board[r2][c2] = { owner: state.currentPlayer, value: v2, isDouble: state.isDoubles, isCashed: false };
+  refreshCell(r1, c1);
+  refreshCell(r2, c2);
+  advanceTurn();
+}
+
+function confirmCash() {
+  const {r1, c1, r2, c2} = state.pendingBlock;
+  const {total} = scoreBlock(r1, c1, r2, c2);
+  state.scores[state.currentPlayer - 1] += total;
+  for (let r = r1; r <= r2; r++)
+    for (let c = c1; c <= c2; c++) {
+      board[r][c].isCashed = true;
+      refreshCell(r, c);
+    }
+  updateScoreDisplay();
+  if (checkWin()) return;
+  advanceTurn();
+}
+
+function swapAssignment() {
+  state.assignment = [state.assignment[1], state.assignment[0]];
+  renderAssignPanel();
+}
+
+function advanceTurn() {
+  state.firstCell = null;
+  state.secondCell = null;
+  state.anchorCell = null;
+  state.pendingBlock = null;
+  state.assignment = null;
+  state.phase = 'roll';
+  state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
+  refreshAllCells();
+  updateUI();
+}
+
+function checkWin() {
+  const p1 = state.scores[0], p2 = state.scores[1];
+  if (state.p1TriggeredFinal) {
+    // P2 just took their final turn
+    if (p2 >= WIN_SCORE) {
+      endGame('draw');
+    } else {
+      endGame('p1');
+    }
+    return true;
+  }
+  if (state.currentPlayer === 1 && p1 >= WIN_SCORE) {
+    state.p1TriggeredFinal = true;
+    // P2 gets one more turn — let turn advance normally
+    return false;
+  }
+  if (state.currentPlayer === 2 && p2 >= WIN_SCORE) {
+    endGame('p2');
+    return true;
+  }
+  return false;
+}
+
+function endGame(result) {
+  state.gameOver = true;
+  const title = document.getElementById('game-over-title');
+  const msg = document.getElementById('game-over-msg');
+  if (result === 'draw') {
+    title.textContent = "It's a Draw!";
+    msg.textContent = `Both players reached ${WIN_SCORE}. Final scores: P1 ${state.scores[0]} — P2 ${state.scores[1]}`;
+  } else {
+    const p = result === 'p1' ? 1 : 2;
+    title.textContent = `Player ${p} Wins!`;
+    msg.textContent = `Reached ${WIN_SCORE} points with a score of ${state.scores[p-1]}.`;
+  }
+  document.getElementById('game-over').classList.add('visible');
+  refreshAllCells();
+  updateUI();
+}
+
+// ── UI update ──────────────────────────────────────────────────────────────
+function updateScoreDisplay() {
+  document.getElementById('score-p1').textContent = state.scores[0];
+  document.getElementById('score-p2').textContent = state.scores[1];
+  document.getElementById('card-p1').classList.toggle('active', state.currentPlayer === 1 && !state.gameOver);
+  document.getElementById('card-p2').classList.toggle('active', state.currentPlayer === 2 && !state.gameOver);
+}
+
+function updateUI() {
+  updateScoreDisplay();
+  const phase = state.phase;
+  const cp = state.currentPlayer;
+
+  const btnRoll    = document.getElementById('btn-roll');
+  const btnCash    = document.getElementById('btn-cash');
+  const btnSwap    = document.getElementById('btn-swap');
+  const btnConfirm = document.getElementById('btn-confirm');
+  const btnCancel  = document.getElementById('btn-cancel');
+  const assignPanel = document.getElementById('assign-panel');
+  const statusEl   = document.getElementById('status');
+
+  // Reset visibility
+  btnRoll.style.display    = 'inline-block';
+  btnCash.style.display    = 'inline-block';
+  btnSwap.style.display    = 'none';
+  btnConfirm.style.display = 'none';
+  btnCancel.style.display  = 'none';
+  assignPanel.classList.remove('visible');
+
+  btnRoll.disabled = true;
+  btnCash.disabled = true;
+
+  const pName = `Player ${cp} (${cp === 1 ? 'White' : 'Black'})`;
+  const finalTurnNote = state.p1TriggeredFinal && cp === 2 ? ' — Final turn!' : '';
+
+  if (state.gameOver) {
+    statusEl.textContent = 'Game over.';
+    return;
+  }
+
+  if (phase === 'roll') {
+    btnRoll.disabled = false;
+    btnCash.disabled = !hasAnyValidBlock(cp);
+    statusEl.textContent = `${pName}'s turn${finalTurnNote} — Roll dice or cash a block.`;
+  } else if (phase === 'place-first') {
+    btnCancel.style.display = 'inline-block';
+    const [d1, d2] = state.diceRoll;
+    statusEl.textContent = `Rolled ${d1} & ${d2}${state.isDoubles ? ' (Doubles ✦)' : ''} — Click a cell to place first number.`;
+  } else if (phase === 'place-second') {
+    btnCancel.style.display = 'inline-block';
+    statusEl.textContent = 'Click an adjacent cell for the second number.';
+  } else if (phase === 'place-confirm') {
+    btnSwap.style.display = 'inline-block';
+    btnConfirm.style.display = 'inline-block';
+    btnConfirm.textContent = 'Place Numbers';
+    btnCancel.style.display = 'inline-block';
+    assignPanel.classList.add('visible');
+    renderAssignPanel();
+    statusEl.textContent = 'Swap numbers if desired, then confirm placement.';
+  } else if (phase === 'cash-select') {
+    btnCancel.style.display = 'inline-block';
+    if (!state.anchorCell) {
+      statusEl.textContent = 'Click the first corner of your block.';
+    } else {
+      statusEl.textContent = 'Click the opposite corner to define your rectangle.';
+    }
+  } else if (phase === 'cash-confirm') {
+    const {r1, c1, r2, c2} = state.pendingBlock;
+    const sc = scoreBlock(r1, c1, r2, c2);
+    let multStr = sc.mult > 1 ? ` ×${sc.mult}` : '';
+    btnConfirm.style.display = 'inline-block';
+    btnConfirm.textContent = `Cash (+${sc.total} pts)`;
+    btnCancel.style.display = 'inline-block';
+    statusEl.textContent = `Block: ${sc.size} cells, base ${sc.base}${multStr} = ${sc.total} pts${sc.hasDouble ? ' (✦ Doubles)' : ''}${sc.size >= 8 ? ' (Size bonus)' : ''}`;
+  }
+
+  // Hide roll/cash in non-roll phases
+  if (phase !== 'roll') {
+    btnRoll.style.display = 'none';
+    btnCash.style.display = 'none';
+  }
+}
+
+function renderAssignPanel() {
+  const panel = document.getElementById('assign-preview');
+  const [v1, v2] = state.assignment;
+  const cp = state.currentPlayer;
+  const bg1 = cp === 1 ? '#F0EEE8' : '#1C1C1C';
+  const fg1 = cp === 1 ? '#1A1A1A' : '#F0EEE8';
+  panel.innerHTML = `
+    <div class="assign-cell" style="background:${bg1};color:${fg1};">${v1}</div>
+    <span style="color:#6a8a9a;">→ cell 1 &nbsp; | &nbsp; cell 2 ←</span>
+    <div class="assign-cell" style="background:${bg1};color:${fg1};">${v2}</div>
+  `;
+}
+
+// ── Button handlers ────────────────────────────────────────────────────────
+document.getElementById('btn-roll').addEventListener('click', rollDice);
+
+document.getElementById('btn-cash').addEventListener('click', () => {
+  state.phase = 'cash-select';
+  state.anchorCell = null;
+  state.pendingBlock = null;
+  refreshAllCells();
+  updateUI();
+});
+
+document.getElementById('btn-swap').addEventListener('click', swapAssignment);
+document.getElementById('btn-confirm').addEventListener('click', () => {
+  if (state.phase === 'place-confirm') confirmPlacement();
+  else if (state.phase === 'cash-confirm') confirmCash();
+});
+
+document.getElementById('btn-cancel').addEventListener('click', () => {
+  state.phase = 'roll';
+  state.firstCell = null;
+  state.secondCell = null;
+  state.anchorCell = null;
+  state.pendingBlock = null;
+  state.assignment = state.diceRoll ? [...state.diceRoll] : null;
+  refreshAllCells();
+  updateUI();
+});
+
+document.getElementById('btn-restart').addEventListener('click', () => {
+  document.getElementById('game-over').classList.remove('visible');
+  initGame();
+});
+
+// ── Start ──────────────────────────────────────────────────────────────────
+initGame();
+</script>
+</body>
+</html>
