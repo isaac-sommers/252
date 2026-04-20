@@ -75,6 +75,7 @@
     grid-template-columns: repeat(12, 44px);
     grid-template-rows: repeat(12, 44px);
     gap: 0;
+    position: relative;
   }
 
   .cell {
@@ -603,6 +604,68 @@ function hasAnyValidBlock(player) {
   return false;
 }
 
+function findMaximalValidBlocks(player) {
+  const all = [];
+  for (let r1 = 0; r1 < ROWS-1; r1++)
+    for (let c1 = 0; c1 < COLS-1; c1++)
+      for (let r2 = r1+1; r2 < ROWS; r2++)
+        for (let c2 = c1+1; c2 < COLS; c2++)
+          if (isValidBlock(r1, c1, r2, c2, player))
+            all.push({r1, c1, r2, c2});
+  // Keep only blocks not fully contained within a larger valid block
+  return all.filter(b => !all.some(b2 =>
+    b2 !== b &&
+    b2.r1 <= b.r1 && b2.c1 <= b.c1 &&
+    b2.r2 >= b.r2 && b2.c2 >= b.c2
+  ));
+}
+
+function renderBlockHighlights() {
+  document.querySelectorAll('.block-highlight').forEach(el => el.remove());
+  if (state.gameOver || state.phase === 'cash-select' || state.phase === 'cash-confirm') return;
+
+  const blocks = findMaximalValidBlocks(state.currentPlayer);
+  if (!blocks.length) return;
+
+  const boardEl = document.getElementById('board');
+  const boardRect = boardEl.getBoundingClientRect();
+
+  // Three glow levels: no mult, ×2, ×4
+  const borderColors = ['#E0FB3A55', '#E0FB3Aaa', '#E0FB3A'];
+  const glows = [
+    '0 0 5px #E0FB3A44',
+    '0 0 8px #E0FB3Aaa, 0 0 3px #E0FB3A66',
+    '0 0 14px #E0FB3A, 0 0 5px #E0FB3Acc, 0 0 2px #E0FB3A'
+  ];
+
+  for (const {r1, c1, r2, c2} of blocks) {
+    const {mult} = scoreBlock(r1, c1, r2, c2);
+    const level = mult === 1 ? 0 : mult === 2 ? 1 : 2;
+
+    const tlRect = getCellEl(r1, c1).getBoundingClientRect();
+    const brRect = getCellEl(r2, c2).getBoundingClientRect();
+
+    const top    = tlRect.top    - boardRect.top;
+    const left   = tlRect.left   - boardRect.left;
+    const width  = brRect.right  - tlRect.left;
+    const height = brRect.bottom - tlRect.top;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'block-highlight';
+    overlay.style.cssText = `
+      position: absolute;
+      top: ${top}px; left: ${left}px;
+      width: ${width}px; height: ${height}px;
+      border: 2px solid ${borderColors[level]};
+      box-shadow: ${glows[level]};
+      border-radius: 2px;
+      pointer-events: none;
+      z-index: 10;
+    `;
+    boardEl.appendChild(overlay);
+  }
+}
+
 // ── Scoring ────────────────────────────────────────────────────────────────
 function scoreBlock(r1, c1, r2, c2) {
   let total = 0, hasDouble = false;
@@ -659,6 +722,7 @@ function advanceTurn() {
   state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
   refreshAllCells();
   updateUI();
+  renderBlockHighlights();
 }
 
 function checkWin() {
@@ -804,6 +868,7 @@ document.getElementById('btn-cash').addEventListener('click', () => {
   state.phase = 'cash-select';
   state.anchorCell = null;
   state.pendingBlock = null;
+  document.querySelectorAll('.block-highlight').forEach(el => el.remove());
   refreshAllCells();
   updateUI();
 });
@@ -833,6 +898,7 @@ document.getElementById('btn-cancel').addEventListener('click', () => {
   }
   refreshAllCells();
   updateUI();
+  renderBlockHighlights();
 });
 
 document.getElementById('btn-restart').addEventListener('click', () => {
