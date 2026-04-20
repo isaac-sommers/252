@@ -285,6 +285,37 @@
   #game-over-box h2 { font-size: 2rem; color: #E0FB3A; margin-bottom: 12px; }
   #game-over-box p  { color: #E8E4DC; margin-bottom: 24px; }
   #btn-restart { background: #E0FB3A; color: #1a1a1a; font-weight: bold; font-size: 1.1rem; padding: 12px 32px; }
+
+  #rules {
+    max-width: 540px;
+    margin-top: 32px;
+    padding: 20px 24px;
+    background: #3d3d00;
+    border-radius: 4px;
+    color: #E8E4DC;
+  }
+
+  #rules h2 {
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #E0FB3A;
+    margin-bottom: 12px;
+  }
+
+  #rules ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  #rules li {
+    font-size: 0.8rem;
+    line-height: 1.6;
+    padding-left: 12px;
+    border-left: 2px solid #5a5a3a;
+  }
 </style>
 </head>
 <body>
@@ -326,6 +357,16 @@
   </div>
 
   <div id="status">Player 1's turn — Roll dice or cash a block.</div>
+</div>
+
+<div id="rules">
+  <h2>How to Play</h2>
+  <ul>
+    <li>Players alternate turns. Each turn: roll two dice and place both numbers on any two adjacent empty squares — or cash a block instead.</li>
+    <li>A <strong>block</strong> is any solid rectangle of your own squares, at least 2×2. Cashing scores the sum of its numbers and ends your turn (no roll).</li>
+    <li>Blocks are worth double if they contain a doubles roll (✦), and double again if they cover 8 or more squares — up to ×4 total.</li>
+    <li>First to <strong>252 points</strong> wins. If Player 1 hits 252, Player 2 gets one final turn to tie.</li>
+  </ul>
 </div>
 
 <div id="game-over">
