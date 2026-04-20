@@ -812,12 +812,22 @@ document.getElementById('btn-confirm').addEventListener('click', () => {
 });
 
 document.getElementById('btn-cancel').addEventListener('click', () => {
-  state.phase = 'roll';
-  state.firstCell = null;
-  state.secondCell = null;
-  state.anchorCell = null;
-  state.pendingBlock = null;
-  state.assignment = state.diceRoll ? [...state.diceRoll] : null;
+  const midPlacement = ['place-second', 'place-confirm'].includes(state.phase);
+  if (midPlacement) {
+    // Keep the dice roll — just clear cell selections and go back to picking
+    state.phase = 'place-first';
+    state.firstCell = null;
+    state.secondCell = null;
+    state.assignment = [...state.diceRoll];
+  } else {
+    // Cancelling a cash attempt or from place-first — go fully back to roll
+    state.phase = 'roll';
+    state.firstCell = null;
+    state.secondCell = null;
+    state.anchorCell = null;
+    state.pendingBlock = null;
+    state.assignment = state.diceRoll ? [...state.diceRoll] : null;
+  }
   refreshAllCells();
   updateUI();
 });
