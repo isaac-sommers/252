@@ -20,20 +20,6 @@
     padding: 20px;
   }
 
-  h1 {
-    font-size: 4.4rem;
-    font-family: 'Space Mono', monospace;
-    font-weight: 700;
-    letter-spacing: -0.04em;
-    margin-bottom: 16px;
-    color: #E8E4DC;
-    background: #3d3d00;
-    padding: 10px 20px;
-    border-radius: 4px;
-    white-space: nowrap;
-    display: inline-block;
-    line-height: 1;
-  }
 
   /* Score panel */
   #scoreboard {
@@ -76,6 +62,25 @@
     padding: 8px;
     border-radius: 4px;
     margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #grid-watermark {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-style: normal;
+    font-size: 240px;
+    color: rgba(180, 180, 130, 0.18);
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+    z-index: 5;
   }
 
   #board {
@@ -328,8 +333,6 @@
 </head>
 <body>
 
-<h1>252</h1>
-
 <div id="scoreboard">
   <div class="score-card p1 active" id="card-p1">
     <div class="score-label">PLAYER 1</div>
@@ -345,6 +348,7 @@
 </div>
 
 <div id="board-wrap">
+  <div id="grid-watermark">252</div>
   <div id="board"></div>
 </div>
 
