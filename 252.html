@@ -24,7 +24,7 @@
     font-size: 2rem;
     letter-spacing: 0.3em;
     margin-bottom: 16px;
-    color: #c8c0b0;
+    color: #E8E4DC;
   }
 
   /* Score panel */
@@ -224,7 +224,7 @@
 
   #status {
     font-size: 0.95rem;
-    color: #b8c8d8;
+    color: #E8E4DC;
     text-align: center;
     min-height: 1.4em;
     letter-spacing: 0.02em;
@@ -244,7 +244,7 @@
 
   #assign-panel.visible { display: flex; }
 
-  #assign-panel .assign-label { font-size: 0.85rem; color: #b8c8d8; }
+  #assign-panel .assign-label { font-size: 0.85rem; color: #E8E4DC; }
 
   #assign-preview {
     display: flex;
@@ -283,7 +283,7 @@
   }
 
   #game-over-box h2 { font-size: 2rem; color: #E0FB3A; margin-bottom: 12px; }
-  #game-over-box p  { color: #b8c8d8; margin-bottom: 24px; }
+  #game-over-box p  { color: #E8E4DC; margin-bottom: 24px; }
   #btn-restart { background: #E0FB3A; color: #1a1a1a; font-weight: bold; font-size: 1.1rem; padding: 12px 32px; }
 </style>
 </head>
@@ -297,7 +297,7 @@
     <div class="score-value" id="score-p1">0</div>
     <div class="score-name">White</div>
   </div>
-  <div style="color:#8a8a50; font-size:1.4rem;">↔</div>
+  <div style="color:#E8E4DC; font-size:1.4rem;">↔</div>
   <div class="score-card p2" id="card-p2">
     <div class="score-label">PLAYER 2</div>
     <div class="score-value" id="score-p2">0</div>
@@ -856,7 +856,7 @@ function renderAssignPanel() {
   const fg1 = cp === 1 ? '#1A1A1A' : '#F0EEE8';
   panel.innerHTML = `
     <div class="assign-cell" style="background:${bg1};color:${fg1};">${v1}</div>
-    <span style="color:#8a8a50;">→ cell 1 &nbsp; | &nbsp; cell 2 ←</span>
+    <span style="color:#E8E4DC;">→ cell 1 &nbsp; | &nbsp; cell 2 ←</span>
     <div class="assign-cell" style="background:${bg1};color:${fg1};">${v2}</div>
   `;
 }
