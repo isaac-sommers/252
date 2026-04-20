@@ -10,7 +10,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    background: #2a3a47;
+    background: #515200;
     color: #e8e4dc;
     font-family: 'Space Mono', monospace;
     display: flex;
@@ -55,7 +55,7 @@
   }
 
   .score-card.active {
-    box-shadow: 0 0 0 3px #e8c44a;
+    box-shadow: 0 0 0 3px #E0FB3A;
   }
 
   .score-label { font-size: 0.75rem; letter-spacing: 0.1em; opacity: 0.7; }
@@ -64,7 +64,7 @@
 
   /* Grid */
   #board-wrap {
-    background: #3a4e5c;
+    background: #3d3d00;
     padding: 8px;
     border-radius: 4px;
     margin-bottom: 16px;
@@ -80,8 +80,8 @@
   .cell {
     width: 44px;
     height: 44px;
-    background: #7A9BB5;
-    border: 1px solid #6a8ba5;
+    background: #8F8F6B;
+    border: 1px solid #6e6e52;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -95,14 +95,14 @@
   }
 
   /* Sub-grid thick borders every 4 cells */
-  .cell[data-col="0"]  { border-left: 2px solid #4a6a80; }
-  .cell[data-col="4"]  { border-left: 2px solid #4a6a80; }
-  .cell[data-col="8"]  { border-left: 2px solid #4a6a80; }
-  .cell[data-col="11"] { border-right: 2px solid #4a6a80; }
-  .cell[data-row="0"]  { border-top: 2px solid #4a6a80; }
-  .cell[data-row="4"]  { border-top: 2px solid #4a6a80; }
-  .cell[data-row="8"]  { border-top: 2px solid #4a6a80; }
-  .cell[data-row="11"] { border-bottom: 2px solid #4a6a80; }
+  .cell[data-col="0"]  { border-left: 2px solid #5a5a3a; }
+  .cell[data-col="4"]  { border-left: 2px solid #5a5a3a; }
+  .cell[data-col="8"]  { border-left: 2px solid #5a5a3a; }
+  .cell[data-col="11"] { border-right: 2px solid #5a5a3a; }
+  .cell[data-row="0"]  { border-top: 2px solid #5a5a3a; }
+  .cell[data-row="4"]  { border-top: 2px solid #5a5a3a; }
+  .cell[data-row="8"]  { border-top: 2px solid #5a5a3a; }
+  .cell[data-row="11"] { border-bottom: 2px solid #5a5a3a; }
 
   /* Player cell colors */
   .cell.p1       { background: #F0EEE8; color: #1A1A1A; }
@@ -116,17 +116,17 @@
     top: 3px;
     right: 4px;
     font-size: 0.55rem;
-    color: #e8c44a;
+    color: #E0FB3A;
     line-height: 1;
   }
 
   /* Highlight states */
   .cell.highlight-valid    { background: #8ab89a !important; cursor: pointer; }
   .cell.highlight-invalid  { background: #b88a8a !important; }
-  .cell.highlight-selected { background: #e8c44a !important; color: #1a1a1a !important; }
+  .cell.highlight-selected { background: #E0FB3A !important; color: #1a1a1a !important; }
   .cell.highlight-block-valid   { background: #7acc8a !important; }
   .cell.highlight-block-invalid { background: #cc7a7a !important; }
-  .cell.highlight-anchor   { background: #e8c44a !important; color: #1a1a1a !important; }
+  .cell.highlight-anchor   { background: #E0FB3A !important; color: #1a1a1a !important; }
 
   .cell:not([class*="p1"]):not([class*="p2"]).cell:hover {
     filter: brightness(1.1);
@@ -162,7 +162,7 @@
   button:not(:disabled):active { transform: scale(0.97); }
 
   #btn-roll {
-    background: #e8c44a;
+    background: #E0FB3A;
     color: #1a1a1a;
     font-weight: bold;
     min-width: 130px;
@@ -219,7 +219,7 @@
     transition: transform 0.2s;
   }
 
-  .die.doubles { border-color: #e8c44a; box-shadow: 0 0 6px #e8c44a88; }
+  .die.doubles { border-color: #E0FB3A; box-shadow: 0 0 6px #E0FB3A66; }
 
   #status {
     font-size: 0.95rem;
@@ -232,7 +232,7 @@
   /* Placement assignment panel */
   #assign-panel {
     display: none;
-    background: #3a4e5c;
+    background: #3d3d00;
     border-radius: 6px;
     padding: 12px 20px;
     text-align: center;
@@ -274,16 +274,16 @@
   #game-over.visible { display: flex; }
 
   #game-over-box {
-    background: #2a3a47;
-    border: 2px solid #e8c44a;
+    background: #515200;
+    border: 2px solid #E0FB3A;
     border-radius: 8px;
     padding: 40px 56px;
     text-align: center;
   }
 
-  #game-over-box h2 { font-size: 2rem; color: #e8c44a; margin-bottom: 12px; }
+  #game-over-box h2 { font-size: 2rem; color: #E0FB3A; margin-bottom: 12px; }
   #game-over-box p  { color: #b8c8d8; margin-bottom: 24px; }
-  #btn-restart { background: #e8c44a; color: #1a1a1a; font-weight: bold; font-size: 1.1rem; padding: 12px 32px; }
+  #btn-restart { background: #E0FB3A; color: #1a1a1a; font-weight: bold; font-size: 1.1rem; padding: 12px 32px; }
 </style>
 </head>
 <body>
@@ -296,7 +296,7 @@
     <div class="score-value" id="score-p1">0</div>
     <div class="score-name">White</div>
   </div>
-  <div style="color:#6a8a9a; font-size:1.4rem;">↔</div>
+  <div style="color:#8a8a50; font-size:1.4rem;">↔</div>
   <div class="score-card p2" id="card-p2">
     <div class="score-label">PLAYER 2</div>
     <div class="score-value" id="score-p2">0</div>
@@ -453,7 +453,7 @@ function renderDice() {
                    <div class="${cls}">${DIE_FACES[d2]}</div>`;
   if (state.isDoubles) {
     const note = document.createElement('span');
-    note.style.cssText = 'font-size:0.8rem;color:#e8c44a;';
+    note.style.cssText = 'font-size:0.8rem;color:#E0FB3A;';
     note.textContent = 'Doubles! ✦';
     row.appendChild(note);
   }
@@ -792,7 +792,7 @@ function renderAssignPanel() {
   const fg1 = cp === 1 ? '#1A1A1A' : '#F0EEE8';
   panel.innerHTML = `
     <div class="assign-cell" style="background:${bg1};color:${fg1};">${v1}</div>
-    <span style="color:#6a8a9a;">→ cell 1 &nbsp; | &nbsp; cell 2 ←</span>
+    <span style="color:#8a8a50;">→ cell 1 &nbsp; | &nbsp; cell 2 ←</span>
     <div class="assign-cell" style="background:${bg1};color:${fg1};">${v2}</div>
   `;
 }
