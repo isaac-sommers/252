@@ -398,14 +398,15 @@ const ROWS = 12, COLS = 12, WIN_SCORE = 252;
 const DIE_FACES = ['', '⚀','⚁','⚂','⚃','⚄','⚅'];
 
 // ── State ──────────────────────────────────────────────────────────────────
-let board, state;
+let board, state, nextDoubleId;
 
 function initGame() {
   board = Array.from({length: ROWS}, () =>
     Array.from({length: COLS}, () => ({
-      owner: null, value: null, isDouble: false, isCashed: false
+      owner: null, value: null, isDouble: false, doubleId: null, isCashed: false
     }))
   );
+  nextDoubleId = 1;
   state = {
     currentPlayer: 1,
     scores: [0, 0],
@@ -724,13 +725,18 @@ function renderBlockHighlights() {
 
 // ── Scoring ────────────────────────────────────────────────────────────────
 function scoreBlock(r1, c1, r2, c2) {
-  let total = 0, hasDouble = false;
+  let total = 0;
   const size = (r2-r1+1) * (c2-c1+1);
+  const idCounts = {};
   for (let r = r1; r <= r2; r++)
     for (let c = c1; c <= c2; c++) {
-      total += board[r][c].value;
-      if (board[r][c].isDouble) hasDouble = true;
+      const cell = board[r][c];
+      total += cell.value;
+      if (cell.doubleId !== null)
+        idCounts[cell.doubleId] = (idCounts[cell.doubleId] || 0) + 1;
     }
+  // Doubles multiplier only applies if both squares of a pair are in the block
+  const hasDouble = Object.values(idCounts).some(count => count >= 2);
   let mult = 1;
   if (hasDouble) mult *= 2;
   if (size >= 8) mult *= 2;
@@ -742,8 +748,9 @@ function confirmPlacement() {
   const {r: r1, c: c1} = state.firstCell;
   const {r: r2, c: c2} = state.secondCell;
   const [v1, v2] = state.assignment;
-  board[r1][c1] = { owner: state.currentPlayer, value: v1, isDouble: state.isDoubles, isCashed: false };
-  board[r2][c2] = { owner: state.currentPlayer, value: v2, isDouble: state.isDoubles, isCashed: false };
+  const doubleId = state.isDoubles ? nextDoubleId++ : null;
+  board[r1][c1] = { owner: state.currentPlayer, value: v1, isDouble: state.isDoubles, doubleId, isCashed: false };
+  board[r2][c2] = { owner: state.currentPlayer, value: v2, isDouble: state.isDoubles, doubleId, isCashed: false };
   refreshCell(r1, c1);
   refreshCell(r2, c2);
   advanceTurn();
